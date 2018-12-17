@@ -31,7 +31,6 @@ def listenClients(server_ip, port_num):
 def sendMessage(client, message):
     message += str(client.address)
     client.connection.send(message.encode('ASCII'))
-    print('Hello world')
     
 
 main()
