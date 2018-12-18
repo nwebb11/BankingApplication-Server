@@ -1,37 +1,43 @@
 import socket
+import threading
+import sys
 
-class Client:
-    def __init__(self, connection, address):
-            self.connection = connection
-            self.address = address
+class ThreadedServer(object):
+    def __init__(self, host, port):
+        self.host = '127.0.0.1'
+        self.port = port
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.bind((self.host, self.port))
 
-def main():
-    server_ip = '127.0.0.1'
-    port = 5005
-    buffer = 1024
-    Connect = True
-    while Connect:
-        listenClients(server_ip, port)
-        
-      
-def listenClients(server_ip, port_num):
-    try:
-        socket_stream = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        socket_stream.bind((server_ip, port_num))
-        socket_stream.listen(5)
-        connection, address = socket_stream.accept()
-        newClient = Client(connection, address)
-        #message = newClient.connection.recv(1024)
-        print("New client connected ", newClient.address)
-        sendMessage(newClient, 'Server: Connected to server ')
-        return newClient
-    except:
-        print(sys.exc_info()[0])
+    def listen(self):
+        self.sock.listen(5)
+        while True:
+            client, address = self.sock.accept()
+            #client.settimeout(60)
+            print("New client connected")
+            threading.Thread(target = self.listenToClient,args = (client,address)).start()
 
-def sendMessage(client, message):
-    message += str(client.address)
-    client.connection.send(message.encode('ASCII'))
-    
+    def listenToClient(self, client, address):
+        buffer = 1024
+        while True:
+            try:
+                message = "hello"
+                #print(address)
+                client.send(message.encode('ASCII'))
+                #data = bytes(client.recv(buffer))
+                #if data:
+                    #print(data + '%s'%data.decode('ASCII'))
+                    #break
+                #else:
+                    #print(sys.exc_info()[0])
+                    #raise error('Client disconnected')
+                client.close()
+            except:
+                client.close()
+                return False
 
-main()
-    
+if __name__ == "__main__":
+    serverIP = '127.0.0.1'
+    port_num = 5005
+    ThreadedServer(serverIP,port_num).listen()
